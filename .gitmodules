@@ -7,3 +7,9 @@
 [submodule "lib/DHT-sensor-library"]
 	path = lib/DHT-sensor-library
 	url = https://github.com/adafruit/DHT-sensor-library.git
+[submodule "lib/lps-arduino"]
+	path = lib/lps-arduino
+	url = https://github.com/pololu/lps-arduino.git
+[submodule "lib/lis3mdl-arduino"]
+	path = lib/lis3mdl-arduino
+	url = https://github.com/pololu/lis3mdl-arduino.git

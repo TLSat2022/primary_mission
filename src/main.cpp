@@ -1,15 +1,23 @@
 // Includes
 #include <Arduino.h>
+#include <Devices/DeviceDHT.h>
+#include <Devices/Barometer.h>
+#include <Devices/AccGyro.h>
+#include <Devices/Magnetometer.h>
+
 #include <Wire.h>
-#include <LSM6.h>
-#include "DHT.h"
+#include <LIS3MDL.h>
+
 #include <SD.h>
+
+#include <SAMDTimerInterrupt.h>
+#include <SAMD_ISR_Timer.h>
 
 // Conventions
 // Convention motivated by the length of "SerialUSB" name
 #define SER SerialUSB
 
-// Macros
+// Macro constants
 #define SD_CS 11 // SD card Chip Select - pin needed to initialise SD card
 #define DHT_PIN 2
 #define DHT_TYPE DHT22
@@ -18,19 +26,31 @@
 #define LOG_INIT_FAILED(err) SER.println(err); delay(500)
 #define LOG_ERR(err) SER.print("[ERROR] "); SER.println(err)
 
-// Device interfaces
-LSM6 imu;
-DHT dht(DHT_PIN, DHT_TYPE);
+#define INIT(func) while(!func){ LOG_INIT_FAILED("Couldn't initialize device: func"); } SER.println("Successfully initialized device: func")
+
+// Devices interfaces
+Magnetometer magnetometer;
+DeviceDHT dht(DHT_PIN, DHT_TYPE);
+Barometer barometer;
+AccGyro acc_gyro;
+
+Device* devices[4];
+char buffers[4][64];
 
 // Files
 File data_file;
 
+// Timing
+SAMDTimer ITimer(TIMER_TC3);
+SAMD_ISRTimer ISR_TIMER;
+
 // Static variables
-float h, t;
+float h, t, p;
 char output_buffer[512];
 char file_buffer[512];
 
 // Utility function declarations
+[[maybe_unused]]
 void
 ReadFileToSerial(const char* filename);
 
@@ -44,52 +64,42 @@ setup()
     // I2C initialization
     Wire.begin();
 
+    devices[0] = &acc_gyro; devices[1] = &barometer;
+    devices[2] = &magnetometer; devices[3] = &dht;
+
     // Devices Initializations
-    while (!imu.init())
-    {
-        // BE CAREFUL! Macro with parameter - replaces the code with parameter inserted
-        LOG_INIT_FAILED("Failed to initialise IMU");
+    for (auto & device : devices) {
+        device->Initialize();
     }
-    imu.enableDefault();
-    SER.println("Accelerometer and gyroscope initialized successfully!");
 
-    dht.begin();
-    SER.println("DHT22 initialized successfully!");
-
-    while(!SD.begin(SD_CS)){
-        LOG_INIT_FAILED("Failed to initialise SD card");
-    }
-    SER.println("SD card initialized successfully!");
+    INIT(SD.begin(SD_CS));
 }
 
 void
 loop()
 {
     // Devices read
-    imu.read();
-    h = dht.readHumidity();
-    t = dht.readTemperature();
-
-    // Check if any reads failed and exit early (to try again).
-    if (isnan(h) || isnan(t)){
-        LOG_ERR("Failed to measure from DHT sensor");
+    for(auto& device : devices){
+        device->Measure();
     }
 
+    for (int i = 0; i < 4; ++i) {
+        devices[i]->GetPrettyString(buffers[i]);
+    }
     // Write to form making sense for serial port
-    sprintf(output_buffer, "Humidity: %s, Temperature: %s °C \n"
-                           "A: %6d %6d %6d    G: %6d %6d %6d\n\n",
-                           String(h).c_str(), String(t).c_str(),
-                           imu.a.x, imu.a.y, imu.a.z,
-                           imu.g.x, imu.g.y, imu.g.z);
+    sprintf(output_buffer, "%s , %s\n"
+                           "%s%s\n\n",
+            buffers[0], buffers[1], buffers[2], buffers[3]);
 
     SER.println(output_buffer);
 
+    for (int i = 0; i < 4; ++i) {
+        devices[i]->GetCsvString(buffers[i]);
+    }
+
     // Write to CSV format
-    sprintf(file_buffer, "%s;%s;%d;%d;%d;%d;%d;%d",
-            String(h).c_str(), String(t).c_str(),
-            imu.a.x, imu.a.y, imu.a.z,
-            imu.g.x, imu.g.y, imu.g.z
-            );
+    sprintf(file_buffer, "%s%s%s%s",
+            buffers[0], buffers[1], buffers[2], buffers[3]);
 
 
     // Open file
@@ -113,6 +123,7 @@ loop()
 }
 
 // Read the data from SD card (to check if they were written correctly)
+[[maybe_unused]]
 void
 ReadFileToSerial(const char* filename){
     File datalog = SD.open(filename, FILE_READ);

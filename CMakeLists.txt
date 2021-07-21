@@ -31,4 +31,4 @@ add_custom_target(
 )
 
 MESSAGE(INFO "Sources: ${SRC_LIST}")
-add_executable(Z_DUMMY_TARGET ${SRC_LIST})
+add_executable(Z_DUMMY_TARGET ${SRC_LIST} src/Devices/DeviceDHT.cpp include/Devices/DeviceDHT.h src/Devices/Barometer.cpp include/Devices/Barometer.h src/Devices/AccGyro.cpp include/Devices/AccGyro.h src/Devices/Magnetometer.cpp include/Devices/Magnetometer.h)
