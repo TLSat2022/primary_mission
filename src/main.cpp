@@ -1,80 +1,48 @@
 // Includes
 #include <Arduino.h>
-#include <Devices/DeviceDHT.h>
-#include <Devices/Barometer.h>
-#include <Devices/AccGyro.h>
-#include <Devices/Magnetometer.h>
-#include <DeviceGroup.h>
-#include <UtilityCall.h>
-#include <ExtendedTimer.h>
-
+#include <Devices/Devices.h>
+#include <Timing.h>
 #include <Wire.h>
-#include <SD.h>
-
-#include <SAMDTimerInterrupt.h>
-#include <SAMD_ISR_Timer.h>
 
 // Conventions
 // Convention motivated by the length of "SerialUSB" name
 #define SER SerialUSB
 
 // Macro constants
-#define SD_CS 11 // SD card Chip Select - pin needed to initialise SD card
+// SD card Chip Select - pin needed to initialise SD card
+#define SD_CS 11
 #define DHT_PIN 2
 #define DHT_TYPE DHT22
 
 // Utility Macros
-#define LOG_INIT_FAILED(err) SER.println(err); delay(500)
 #define LOG_ERR(err) SER.print("[ERROR] "); SER.println(err)
 
-#define INIT(func) while(!func){ LOG_INIT_FAILED("Couldn't initialize device: func"); } SER.println("Successfully initialized device: func")
-
-// Devices interfaces
+// Devices
 Magnetometer magnetometer;
 DeviceDHT dht(DHT_PIN, DHT_TYPE);
 Barometer barometer;
 AccGyro acc_gyro;
+DeviceSD sd(SD_CS);
 
-DeviceGroup<3> altimu;
-DeviceGroup<1> dht_group;
+// Device groups
+DeviceGroup<3> altimu = { &magnetometer, &barometer, &acc_gyro };
+DeviceGroup<1> dht_group = { &dht };
 
-Device* devices[4];
-char buffers[4][64];
-Callable* callables[5];
-
-// Files
-File data_file;
+Device* devices[] = { &dht, &barometer, &acc_gyro, &magnetometer, &sd };
 
 // Timing
 SAMDTimer ITimer(TIMER_TC3);
 SAMD_ISRTimer ISR_TIMER;
 ExtendedTimer timer(ISR_TIMER);
 
-#define SET_INTERVAL(time, func) ISR_TIMER.setInterval(time, [](){ func; })
-
-// Static variables
-float h, t, p;
-char output_buffer[512];
-char file_buffer[512];
-
-
+// Buffers
+char buffer_1[512], buffer_2[512];
 
 // Utility function declarations
-[[maybe_unused]]
-void
-ReadFileToSerial(const char* filename);
-
-void
-TimerHandler();
-
-void
-Printing();
-
-void
-WriteFile();
-
-void
-CheckInitialization();
+[[maybe_unused]] void ReadFileToSerial(const char* filename);
+void Printing();
+void WriteFile();
+void CheckInitialization();
 
 // Callables
 UtilityCall write_serial(Printing);
@@ -91,20 +59,9 @@ setup()
     // I2C initialization
     Wire.begin();
 
-    devices[0] = &dht; devices[1] = &barometer;
-    devices[2] = &acc_gyro; devices[3] = &magnetometer;
+    CheckInitialization();
 
-    altimu[0] = &acc_gyro; altimu[1] = &barometer; altimu[2] = &magnetometer;
-    dht_group[0] = &dht;
-
-    // Devices Initializations
-    for (auto & device : devices) {
-        device->Initialize();
-    }
-
-    INIT(SD.begin(SD_CS));
-
-    ITimer.attachInterruptInterval(10 * 1000, TimerHandler);
+    ITimer.attachInterruptInterval(10 * 1000, [](){ ISR_TIMER.run(); });
 
     timer.SetInterval(500L, &altimu);
     timer.SetInterval(2000L, &dht_group);
@@ -132,53 +89,37 @@ ReadFileToSerial(const char* filename){
 
 void
 Printing(){
-    for (int i = 0; i < 4; ++i) {
-        devices[i]->GetPrettyString(buffers[i]);
+    for (auto& device : devices) {
+        if(device->GetPrettyString(buffer_2) != nullptr) {
+            sprintf(buffer_1, "%s: %s", device->GetName().c_str(), buffer_2);
+            SER.println(buffer_1);
+        }
     }
-    // Write to form making sense for serial port
-    sprintf(output_buffer, "%s , %s\n"
-                           "%s%s\n\n",
-            buffers[0], buffers[1], buffers[2], buffers[3]);
+    SER.println();
 
-    SER.println(output_buffer);
 }
 
 void
 WriteFile() {
-    for (int i = 0; i < 4; ++i) {
-        devices[i]->GetCsvString(buffers[i]);
-    }
-
-    // Write to CSV format
-    sprintf(file_buffer, "%s%s%s%s",
-            buffers[0], buffers[1], buffers[2], buffers[3]);
-
-
     // Open file
-    data_file = SD.open("data.csv", FILE_WRITE);
+    File data_file = SD.open("data.csv", FILE_WRITE);
 
     // Write formatted data to file
     if(data_file)
     {
-        data_file.println(file_buffer);
-        // Needed to write to file
+        for (auto& device : devices)
+            if(device->GetCsvString(buffer_1) != nullptr)
+                data_file.print(buffer_1);
+        data_file.println();
         data_file.close();
     }
-    else
-    {
-        LOG_ERR("Couldn't write to file");
-    }
-}
-
-void
-TimerHandler() {
-    ISR_TIMER.run();
+    else { LOG_ERR("Couldn't write to file"); }
 }
 
 void
 CheckInitialization() {
     for (auto & device : devices)
         if(!device->IsInitialized())
-            device->Initialize();
+            if(!device->Initialize()) { LOG_ERR(device->GetName() + " couldn't be initialized"); }
 
 }

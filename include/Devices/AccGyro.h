@@ -16,7 +16,7 @@ public:
     char * GetPrettyString(char *buffer) const override;
     char * GetCsvString(char *buffer) const override;
 
-    String GetName() const override { return "accelerometer and gyroscope"; }
+    String GetName() const override { return "Accelerometer and gyroscope"; }
 };
 
 

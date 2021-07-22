@@ -7,12 +7,23 @@
 
 #include <Device.h>
 #include <Callable.h>
+#include <initializer_list>
 
 template<int N>
 class DeviceGroup : public Callable {
     bool bExecute = false;
 public:
     Device* devices[N]{};
+
+    DeviceGroup(std::initializer_list<Device*> list){
+        int i = 0;
+        for (auto device: list) {
+            if(i < N)
+                devices[i++] = device;
+        }
+    }
+
+    DeviceGroup() = default;
 
     void Call() override{
         bExecute = true;

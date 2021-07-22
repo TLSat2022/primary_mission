@@ -16,8 +16,10 @@ void Inter(void* param){
 
 class ExtendedTimer {
     SAMD_ISRTimer& local_timer;
+
     int callbacks = 0;
     Callable* callables[16]{};
+
 public:
     explicit ExtendedTimer(SAMD_ISRTimer& timer) : local_timer(timer){}
     void SetInterval(unsigned long time, Callable* callable){
