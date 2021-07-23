@@ -1,0 +1,1 @@
+{"type": "library", "name": "LSM6", "version": "1.0.0", "spec": {"owner": null, "id": null, "name": "lsm6-arduino", "requirements": null, "url": "file://lib/lsm6-arduino"}}
