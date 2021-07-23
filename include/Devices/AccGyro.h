@@ -5,7 +5,7 @@
 #ifndef CANSATDUINO_ACCGYRO_H
 #define CANSATDUINO_ACCGYRO_H
 
-#include <Device.h>
+#include <DC/Device.h>
 #include <LSM6.h>
 
 class AccGyro : public Device{

@@ -10,5 +10,6 @@
 #include "Magnetometer.h"
 #include "DeviceDHT.h"
 #include "DeviceSD.h"
+#include "DeviceBMP.h"
 
 #endif //CANSATDUINO_DEVICES_H

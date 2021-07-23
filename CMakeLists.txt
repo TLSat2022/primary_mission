@@ -31,4 +31,4 @@ add_custom_target(
 )
 
 MESSAGE(INFO "Sources: ${SRC_LIST}")
-add_executable(Z_DUMMY_TARGET ${SRC_LIST} src/Devices/DeviceDHT.cpp include/Devices/DeviceDHT.h src/Devices/Barometer.cpp include/Devices/Barometer.h src/Devices/AccGyro.cpp include/Devices/AccGyro.h src/Devices/Magnetometer.cpp include/Devices/Magnetometer.h src/Devices/DeviceGroup.cpp include/DeviceGroup.h include/UtilityCall.h include/Callable.h include/ExtendedTimer.h include/Devices/Devices.h src/Devices/DeviceSD.cpp include/Devices/DeviceSD.h include/Timing.h)
+add_executable(Z_DUMMY_TARGET ${SRC_LIST} src/Devices/DeviceDHT.cpp include/Devices/DeviceDHT.h src/Devices/Barometer.cpp include/Devices/Barometer.h src/Devices/AccGyro.cpp include/Devices/AccGyro.h src/Devices/Magnetometer.cpp include/Devices/Magnetometer.h src/Devices/DeviceGroup.cpp include/DC/DeviceGroup.h include/DC/UtilityCall.h include/DC/Callable.h include/DC/ExtendedTimer.h include/Devices/Devices.h src/Devices/DeviceSD.cpp include/Devices/DeviceSD.h include/DC/Timing.h src/Devices/DeviceBMP.cpp include/Devices/DeviceBMP.h src/Transmitter.cpp include/DC/Transmitter.h)

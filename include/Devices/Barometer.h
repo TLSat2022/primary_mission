@@ -5,7 +5,7 @@
 #ifndef CANSATDUINO_BAROMETER_H
 #define CANSATDUINO_BAROMETER_H
 
-#include <Device.h>
+#include <DC/Device.h>
 #include <LPS.h>
 
 class Barometer : public Device{

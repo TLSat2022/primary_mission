@@ -5,7 +5,7 @@
 #ifndef CANSATDUINO_MAGNETOMETER_H
 #define CANSATDUINO_MAGNETOMETER_H
 
-#include <Device.h>
+#include <DC/Device.h>
 #include <LIS3MDL.h>
 
 class Magnetometer : public Device{

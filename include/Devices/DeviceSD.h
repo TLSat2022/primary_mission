@@ -6,7 +6,7 @@
 #define CANSATDUINO_DEVICESD_H
 
 #include <SD.h>
-#include <Device.h>
+#include <DC/Device.h>
 
 class DeviceSD : public Device{
     uint8_t CS = 0;

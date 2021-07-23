@@ -5,9 +5,9 @@
 #ifndef CANSATDUINO_EXTENDEDTIMER_H
 #define CANSATDUINO_EXTENDEDTIMER_H
 
-#include <SAMDTimerInterrupt.h>
-#include <SAMD_ISR_Timer.h>
-#include <Callable.h>
+#include <SAMD_InterruptTimer/SAMDTimerInterrupt.h>
+#include <SAMD_InterruptTimer/SAMD_ISR_Timer.h>
+#include <DC/Callable.h>
 
 void Inter(void* param){
     auto* callable = reinterpret_cast<Callable*>(param);

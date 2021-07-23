@@ -5,7 +5,7 @@
 #ifndef CANSATDUINO_DEVICEDHT_H
 #define CANSATDUINO_DEVICEDHT_H
 
-#include <Device.h>
+#include <DC/Device.h>
 #include <DHT.h>
 
 class DeviceDHT : public Device{

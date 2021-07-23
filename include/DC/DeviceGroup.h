@@ -5,8 +5,8 @@
 #ifndef CANSATDUINO_DEVICEGROUP_H
 #define CANSATDUINO_DEVICEGROUP_H
 
-#include <Device.h>
-#include <Callable.h>
+#include <DC/Device.h>
+#include <DC/Callable.h>
 #include <initializer_list>
 
 template<int N>

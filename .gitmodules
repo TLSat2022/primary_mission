@@ -13,3 +13,9 @@
 [submodule "lib/lis3mdl-arduino"]
 	path = lib/lis3mdl-arduino
 	url = https://github.com/pololu/lis3mdl-arduino.git
+[submodule "lib/RadioHead"]
+	path = lib/RadioHead
+	url = https://github.com/dragino/RadioHead.git
+[submodule "lib/RC"]
+	path = lib/RC
+	url = https://github.com/sui77/rc-switch.git

@@ -1,8 +1,9 @@
 // Includes
 #include <Arduino.h>
 #include <Devices/Devices.h>
-#include <Timing.h>
+#include <DC/Timing.h>
 #include <Wire.h>
+#include <DC/Transmitter.h>
 
 // Conventions
 // Convention motivated by the length of "SerialUSB" name
@@ -23,12 +24,13 @@ DeviceDHT dht(DHT_PIN, DHT_TYPE);
 Barometer barometer;
 AccGyro acc_gyro;
 DeviceSD sd(SD_CS);
+Transmitter transmitter(5);
 
 // Device groups
 DeviceGroup<3> altimu = { &magnetometer, &barometer, &acc_gyro };
 DeviceGroup<1> dht_group = { &dht };
 
-Device* devices[] = { &dht, &barometer, &acc_gyro, &magnetometer, &sd };
+Device* devices[] = { &dht, &barometer, &acc_gyro, &magnetometer, &sd, &transmitter };
 
 // Timing
 SAMDTimer ITimer(TIMER_TC3);
@@ -48,6 +50,7 @@ void CheckInitialization();
 UtilityCall write_serial(Printing);
 UtilityCall write_file(WriteFile);
 UtilityCall check_initialization(CheckInitialization);
+
 
 // Main Program
 void
@@ -74,6 +77,7 @@ void
 loop()
 {
     timer.InLoop();
+    transmitter.Transmit(5.0f);
 }
 
 // Read the data from SD card (to check if they were written correctly)
